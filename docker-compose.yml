@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    networks:
+      - web
+      - internal
+    depends_on:
+      - mariadb
+      - neo4j
+
+  mariadb:
+    image: mariadb:latest
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: social_network
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    networks:
+      - internal
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+  neo4j:
+    image: neo4j:latest
+    restart: always
+    environment:
+      NEO4J_AUTH: neo4j/password
+    networks:
+      - internal
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+
+networks:
+  web:
+  internal:
+    internal: true
+
+volumes:
+  mariadb_data:
+  neo4j_data:
+  neo4j_logs:
