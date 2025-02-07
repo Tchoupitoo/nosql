@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpeedTest SQL/NoSQL</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="controls">
+            <div class="control-group">
+                <label for="dbSelector" class="form-label">Base de données :</label>
+                <select id="dbSelector" class="form-select">
+                    <option value="postgres">PostgreSQL</option>
+                    <option value="neo4j">Neo4j</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label class="form-label">Insert :</label>
+                <input type="number" id="nbEntities" value="100" min="1" max="1000000" class="form-control" placeholder="Nombre d'entités" />
+                <button id="createUsersBtn" class="btn btn-primary">Utilisateurs + Follows</button>
+                <button id="createProduitsBtn" class="btn btn-primary">Produits</button>
+                <button id="createAchatsBtn" class="btn btn-primary">Achats</button>
+            </div>
+
+            <div class="control-group">
+                <button id="dbSizeBtn" class="btn btn-success">MaJ</button>
+                <div id="dbSizeInfo" class="db-size-container">
+                    <div>
+                        <label>Utilisateurs</label>
+                        <span id="nbUtilisateurs">-</span>
+                    </div>
+                    <div>
+                        <label>Followers</label>
+                        <span id="nbFollowers">-</span>
+                    </div>
+                    <div>
+                        <label>Produits</label>
+                        <span id="nbProduits">-</span>
+                    </div>
+                    <div>
+                        <label>Achats</label>
+                        <span id="nbAchats">-</span>
+                    </div>
+                </div>                
+                <button id="dbClearBtn" class="btn btn-danger">Drop</button>
+            </div>
+            
+        <div class="control-group">
+            <label class="form-label">Requètes :</label>
+            <button id="request1" class="btn btn-secondary">Nombre de followers par personne</button>
+            <button id="request2" class="btn btn-secondary">Requète 2</button>
+            <button id="request3" class="btn btn-secondary">Requète 3</button>
+            <button id="request4" class="btn btn-secondary">Requète 4</button>
+            <button id="request5" class="btn btn-secondary">Requète 5</button>
+            <button id="request6" class="btn btn-secondary">Requète 6</button>
+        </div>
+        </div>
+
+        <div class="dashboard">
+            <div class="graph-container">
+                <h3>Performances</h3>
+                <canvas id="performanceGraph" width="400" height="200"></canvas>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>Historique des commandes</h3>
+                    <button id="exportExcel" class="btn btn-success">Exporter en Excel</button>    
+                </div>
+                <div class="table-scroll">
+                    <table id="executionTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>DB</th>
+                                <th>Commande</th>
+                                <th>Nb Entities</th>
+                                <th>Temps (ms)</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="response-container">
+            <h3>Réponse :</h3>
+            <pre id="response"></pre>
+        </div>
+    </div>
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <p id="loadingTextCommande">"Commande"</p>
+        <p id="loadingText">En cours d'execution ...</p>
+        <span id="loadingTime">0</span>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

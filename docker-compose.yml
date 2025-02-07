@@ -1,45 +1,35 @@
-version: '3.8'
-
 services:
-  backend:
-    build: ./backend
-    networks:
-      - web
-      - internal
-    depends_on:
-      - mariadb
-      - neo4j
-
-  mariadb:
-    image: mariadb:latest
+  postgres:
+    image: postgres:16
+    container_name: nosql-postgres
     restart: always
+    env_file:
+      - .env
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: social_network
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
-    networks:
-      - internal
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - mariadb_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT}:5432"
 
   neo4j:
-    image: neo4j:latest
+    image: neo4j:community
+    container_name: nosql-neo4j
     restart: always
+    env_file:
+      - .env
     environment:
-      NEO4J_AUTH: neo4j/password
-    networks:
-      - internal
+      NEO4J_AUTH: ${ENV_NEO4J_USER}/${ENV_NEO4J_PASSWORD}
     volumes:
       - neo4j_data:/data
       - neo4j_logs:/logs
-
-networks:
-  web:
-  internal:
-    internal: true
+    ports:
+      - "7474:7474"
+      - "${ENV_NEO4J_BOLT_PORT}:7687"
 
 volumes:
-  mariadb_data:
+  postgres_data:
   neo4j_data:
   neo4j_logs:
