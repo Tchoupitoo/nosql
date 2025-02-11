@@ -21,6 +21,7 @@ class PostgresDB(base_db):
                 id VARCHAR(36) PRIMARY KEY,
                 nom VARCHAR(255)
             );
+                               
             CREATE TABLE IF NOT EXISTS followers (
                 utilisateur_id VARCHAR(36) REFERENCES utilisateurs(id),
                 follower_id VARCHAR(36) REFERENCES utilisateurs(id),
@@ -102,7 +103,7 @@ class PostgresDB(base_db):
 
         return produits, execution_time
 
-    def create_achats(self, num_achats):
+    def create_achats(self, num_achats_not_used):
         achats = []
         execution_time = 0
         self.pg_cursor.execute("SELECT id FROM utilisateurs;")
@@ -129,9 +130,26 @@ class PostgresDB(base_db):
         execution_time += self.commit()
 
         return achats, execution_time
-    
-    def commit(self):
-        return execute_with_timer(self.pg_conn.commit)
+
+    def select_users(self, num_users):
+        start_time = datetime.now()
+        self.pg_cursor.execute("SELECT * FROM utilisateurs ORDER BY RANDOM() LIMIT %s;", (num_users,))
+        users = self.pg_cursor.fetchall()
+        end_time = datetime.now()
+
+        result = [{"id": row[0], "nom": row[1]} for row in users]
+
+        return result, (end_time - start_time).total_seconds() * 1000
+
+    def select_produits(self, num_produits):
+        start_time = datetime.now()
+        self.pg_cursor.execute("SELECT * FROM produits ORDER BY RANDOM() LIMIT %s;", (num_produits,))
+        produits = self.pg_cursor.fetchall()
+        end_time = datetime.now()
+
+        result = [{"id": row[0], "nom": row[1], "prix": row[2]} for row in produits]
+
+        return result, (end_time - start_time).total_seconds() * 1000
 
     def db_size(self):
         start_time = datetime.now()
@@ -150,32 +168,144 @@ class PostgresDB(base_db):
 
         return {
             "nb_utilisateurs": nb_utilisateurs,
-            "nb_followers": nb_followers,
+            "nb_follows": nb_followers,
             "nb_produits": nb_produits,
             "nb_achats": nb_achats
         }, (end_time - start_time).total_seconds() * 1000
 
-    def request1(self):
+    def requestGlobalFollows(self):
         start_time = datetime.now()
+
         self.pg_cursor.execute("""
-            SELECT u.id, u.nom, COUNT(f.follower_id) AS nb_followers
+            SELECT u.id, u.nom, COUNT(f.utilisateur_id) AS nb_followers
             FROM utilisateurs u
-            LEFT JOIN followers f ON u.id = f.utilisateur_id
-            GROUP BY u.id, u.nom;
+            LEFT JOIN followers f ON u.id = f.follower_id
+            GROUP BY u.id, u.nom
+            ORDER BY nb_followers DESC;           
         """)
         results = self.pg_cursor.fetchall()
         end_time = datetime.now()
-        
-        results = [{"id": row[0], "nom": row[1], "nb_followers": row[2]} for row in results]
 
+        results = [
+            {"id": row[0], "nom": row[1], "nb_followers": row[2]} 
+            for row in results
+        ]
+        
         return results, (end_time - start_time).total_seconds() * 1000
 
+    def requestGlobalAchatsByProduit(self):
+        start_time = datetime.now()
 
-    def request2(self):
-        pass
+        self.pg_cursor.execute("""
+            SELECT p.id AS product_id, p.nom AS product_name, COUNT(DISTINCT a.utilisateur_id) AS num_buyers
+            FROM achats a
+            JOIN produits p ON a.produit_id = p.id
+            GROUP BY p.id, p.nom
+            ORDER BY num_buyers DESC;
+        """)
+        results = self.pg_cursor.fetchall()
+        end_time = datetime.now()
 
-    def request3(self):
-        pass
+        results = [
+            {"product_id": row[0], "product_name": row[1], "num_buyers": row[2]} 
+            for row in results
+        ]
+        
+        return results, (end_time - start_time).total_seconds() * 1000
+    
+    def requestSpecific1(self, user_id, max_level=3): 
+        query = """
+        WITH RECURSIVE follower_hierarchy AS (
+            SELECT follower_id, utilisateur_id, 1 AS level
+            FROM followers
+            WHERE utilisateur_id = %s
+            UNION ALL
+            SELECT f.follower_id, f.utilisateur_id, fh.level + 1
+            FROM followers f
+            INNER JOIN follower_hierarchy fh ON f.utilisateur_id = fh.follower_id
+            WHERE fh.level < %s
+        )
+        SELECT p.id AS product_id, p.nom AS product_name, COUNT(*) AS nb_achats
+        FROM follower_hierarchy fh
+        JOIN achats a ON fh.follower_id = a.utilisateur_id
+        JOIN produits p ON a.produit_id = p.id
+        GROUP BY p.id, p.nom
+        ORDER BY nb_achats DESC;
+        """
+    
+        start_time = datetime.now()
+        self.pg_cursor.execute(query, (user_id, max_level))
+        rows = self.pg_cursor.fetchall()
+        end_time = datetime.now()
+    
+        results = [ {"product_id": row[0], "product_name": row[1], "nb_achats": row[2]} for row in rows ]
+    
+        return results, (end_time - start_time).total_seconds() * 1000
 
-    def request4(self):
-        pass
+    def requestSpecific2(self, user_id, product_id, max_level=3):
+        query = """
+        WITH RECURSIVE follower_hierarchy AS (
+            SELECT follower_id, utilisateur_id, 1 AS level
+            FROM followers
+            WHERE utilisateur_id = %s
+            UNION ALL
+            SELECT f.follower_id, f.utilisateur_id, fh.level + 1
+            FROM followers f
+            INNER JOIN follower_hierarchy fh ON f.utilisateur_id = fh.follower_id
+            WHERE fh.level < %s
+        )
+        SELECT COUNT(*) AS nb_achats
+        FROM follower_hierarchy fh
+        JOIN achats a ON fh.follower_id = a.utilisateur_id
+        JOIN produits p ON a.produit_id = p.id 
+        WHERE p.id = %s
+        GROUP BY p.id, p.nom
+        ORDER BY nb_achats DESC;
+        """
+    
+        start_time = datetime.now()
+        self.pg_cursor.execute(query, (user_id, max_level, product_id))
+        rows = self.pg_cursor.fetchall()
+        end_time = datetime.now()
+    
+    
+        return rows[0], (end_time - start_time).total_seconds() * 1000
+
+    def requestSpecific3(self, product_id, max_level=3):
+        query = """
+        WITH RECURSIVE follower_circle AS (
+            SELECT a.utilisateur_id, 1 AS level
+            FROM achats a
+            WHERE a.produit_id = %s
+            UNION ALL
+            SELECT f.follower_id, fc.level + 1 AS level
+            FROM follows f
+            JOIN follower_circle fc ON f.utilisateur_id = fc.utilisateur_id
+            WHERE fc.level < %s
+        )
+        SELECT p.id AS product_id, p.nom AS product_name, COUNT(DISTINCT a.utilisateur_id) AS num_buyers
+        FROM produits p
+        JOIN achats a ON p.id = a.produit_id
+        JOIN follower_circle fc ON a.utilisateur_id = fc.utilisateur_id
+        WHERE p.id = %s
+        GROUP BY p.id, p.nom
+        ORDER BY num_buyers DESC;
+        """
+
+        start_time = datetime.now()
+
+        self.pg_cursor.execute(query, (product_id, max_level, product_id))
+        
+        products = self.pg_cursor.fetchall()
+        end_time = datetime.now()
+
+        products = [
+            {"product_id": row[0], "product_name": row[1], "num_buyers": row[2]} 
+            for row in products
+        ]
+
+        return products, (end_time - start_time).total_seconds() * 1000
+
+
+    def commit(self):
+        return execute_with_timer(self.pg_conn.commit)

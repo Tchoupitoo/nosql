@@ -1,5 +1,6 @@
 from datetime import datetime
 import json
+import os
 
 def execute_with_timer(func, *args, **kwargs):
     start_time = datetime.now()
@@ -31,3 +32,8 @@ def get_history():
         for line in f:
             history.append(json.loads(line))
     return history
+
+def clear_history():
+    if os.path.exists("history.json"):
+        os.remove("history.json")
+    return "Historique effacé"

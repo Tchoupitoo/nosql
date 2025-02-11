@@ -1,37 +1,13 @@
 document.addEventListener("DOMContentLoaded", function () {
-    getHistory();
+    getHistory().then(() => {
+        hideLoading();
+    });
+
     const dbSelector = document.getElementById('dbSelector');
     const responseElement = document.getElementById('response');
     const performanceGraph = document.getElementById('performanceGraph');
     const executionTable = document.getElementById('executionTable').querySelector("tbody");
     let loadingInterval;
-
-    function showLoading(commandLabel) {
-        document.getElementById('loadingOverlay').style.display = 'flex';
-        let startTime = Date.now();
-        document.getElementById('loadingTime').textContent = "";
-        document.getElementById('loadingTextCommande').textContent = commandLabel;
-
-        loadingInterval = setInterval(() => {
-            let elapsedTime = Math.floor((Date.now() - startTime) / 1000);
-            if (elapsedTime < 60) {
-                elapsedTime = elapsedTime + "s";
-            } else if (elapsedTime < 3600) {
-                elapsedTime = Math.floor(elapsedTime / 60) + "m " + (elapsedTime % 60) + "s";
-            } else {
-                elapsedTime = Math.floor(elapsedTime / 3600) + "h " + Math.floor((elapsedTime % 3600) / 60) + "m" + (elapsedTime % 60) + "s";
-            }
-            document.getElementById('loadingTime').textContent = elapsedTime;
-        }, 1000);
-    }
-
-    function hideLoading() {
-        clearInterval(loadingInterval);
-        document.getElementById('loadingOverlay').style.display = 'none';
-    }
-
-    hideLoading();
-
 
     let postgresCommandCount = 0;
     let neo4jCommandCount = 0;
@@ -98,11 +74,10 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    function getHistory() {
+    async function getHistory() {
         fetch('/history')
             .then(response => response.json())
             .then(data => {
-                console.log(data);
                 for (let i = 0; i < data.length; i++) {
                     updateExecutionTable(data[i]);
                 }
@@ -110,7 +85,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function showResponse(message) {
-        responseElement.textContent = JSON.stringify(message, null, 2);
+        message = JSON.stringify(message, null, 2);
+        if (message.length > 10000) {
+            message = message.substring(0, 10000) + "\n...";
+        }
+        responseElement.textContent = message;
     }
 
     function updateExecutionTable(data) {
@@ -150,9 +129,8 @@ document.addEventListener("DOMContentLoaded", function () {
         chart.update();
     }
 
-    async function executeInsert(endpoint, commandName) {
+    async function executeInsertOrSelect(endpoint, commandName, nbEntities) {
         const db = dbSelector.value;
-        const nbEntities = document.getElementById('nbEntities').value;
 
         showLoading(commandName + " " + nbEntities + " (" + db + ")");
         const response = await fetch(`/${endpoint}`, {
@@ -168,7 +146,7 @@ document.addEventListener("DOMContentLoaded", function () {
         updateExecutionTable(data.command_history);
     }
 
-    async function executeRequest(endpoint, commandName) {
+    async function executeGlobalRequest(endpoint, commandName) {
         const db = dbSelector.value;
         showLoading(commandName + " (" + db + ")");
         const response = await fetch(`/${endpoint}`, {
@@ -184,19 +162,96 @@ document.addEventListener("DOMContentLoaded", function () {
         updateExecutionTable(data.command_history);
     }
 
-    document.getElementById('request1').addEventListener('click', () => executeRequest('request1', document.getElementById('request1').textContent));
-    document.getElementById('request2').addEventListener('click', () => executeRequest('request2', document.getElementById('request2').textContent));
-    document.getElementById('request3').addEventListener('click', () => executeRequest('request3', document.getElementById('request3').textContent));
-    document.getElementById('request4').addEventListener('click', () => executeRequest('request4', document.getElementById('request4').textContent));
-    document.getElementById('request5').addEventListener('click', () => executeRequest('request5', document.getElementById('request5').textContent));
-    document.getElementById('request6').addEventListener('click', () => executeRequest('request6', document.getElementById('request6').textContent));
+    async function executeSpecific1() {
+        const db = dbSelector.value;
+        const userId = document.getElementById('userIdSpecific1').value;
+        const deepLevel = document.getElementById('deepLevelSpecific1').value;
 
-    document.getElementById('createUsersBtn').addEventListener('click', () => executeInsert('create_users', 'Insert Utilisateurs'));
-    document.getElementById('createProduitsBtn').addEventListener('click', () => executeInsert('create_produits', 'Insert Produits'));
-    document.getElementById('createAchatsBtn').addEventListener('click', () => executeInsert('create_achats', 'Insert Achats'));
+        showLoading("Nb achats par produit depuis un user (profondeur : "+ deepLevel+") (" + db + ")");
+        const response = await fetch(`/request/specific/1`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ db_target: db, user_id: userId, deep_level: deepLevel })
+        });
+        hideLoading();
 
-    // Gestion de la taille de la base de données
-    document.getElementById('dbSizeBtn').addEventListener('click', async () => {
+        const data = await response.json();
+
+        showResponse(data);
+        updateExecutionTable(data.command_history);
+    }
+
+    async function executeSpecific2() {
+        const db = dbSelector.value;
+        const userId = document.getElementById('userIdSpecific2').value;
+        const productId = document.getElementById('productIdSpecific2').value;
+        const deepLevel = document.getElementById('deepLevelSpecific2').value;
+
+        showLoading("Nb achats d'un produit depuis un user (profondeur : "+ deepLevel+") (" + db + ")");
+        const response = await fetch(`/request/specific/2`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ db_target: db, user_id: userId, product_id: productId, deep_level: deepLevel })
+        });
+        hideLoading();
+
+        const data = await response.json();
+
+        showResponse(data);
+        updateExecutionTable(data.command_history);
+    }    
+
+    async function executeSpecific3() {
+        const db = dbSelector.value;
+        const productId = document.getElementById('productIdSpecific3').value;
+        const deepLevel = document.getElementById('deepLevelSpecific3').value;
+
+        showLoading("Nb achats d'un produit depuis un user (profondeur : "+ deepLevel+") (" + db + ")");
+        const response = await fetch(`/request/specific/3`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ db_target: db, product_id: productId, deep_level: deepLevel })
+        });
+        hideLoading();
+
+        const data = await response.json();
+
+        showResponse(data);
+        updateExecutionTable(data.command_history);
+    }  
+
+    async function clearDB() {
+        if (!confirm("Êtes-vous sûr de vouloir supprimer ?")) {
+            return;
+        }
+        const db = dbSelector.value;
+        fetch(`/clear`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ db_target: db })
+        })
+            .then(response => response.json())
+            .then(data => {
+                showResponse(data);
+                updateExecutionTable(data.command_history);
+            });
+    }
+
+    async function clearHistory() {
+        if (!confirm("Êtes-vous sûr de vouloir supprimer l'historique ?")) {
+            return;
+        }
+        const response = await fetch(`/clear_history`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        const data = await response.json();
+        showResponse(data);
+        location.reload();
+    }
+
+    async function getDBSize() {
         const db = dbSelector.value;
         const response = await fetch(`/size`, {
             method: 'POST',
@@ -211,29 +266,54 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById('nbUtilisateurs').textContent = data.size.nb_utilisateurs;
         document.getElementById('nbProduits').textContent = data.size.nb_produits;
         document.getElementById('nbAchats').textContent = data.size.nb_achats;
-        document.getElementById('nbFollowers').textContent = data.size.nb_followers;
-    });
+        document.getElementById('nbFollows').textContent = data.size.nb_follows;
+    }
 
-    document.getElementById('dbClearBtn').addEventListener('click', async () => {
-        if (!confirm("Êtes-vous sûr de vouloir supprimer ?")) {
-            return;
-        }
-        const db = dbSelector.value;
-        const response = await fetch(`/clear`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ db_target: db })
-        });
-
-        const data = await response.json();
-        showResponse(data);
-        updateExecutionTable(data.command_history);
-    });
-
-    document.getElementById('exportExcel').addEventListener('click', () => {
+    function exportExcel() {
         let table = document.getElementById('executionTable');
         let wb = XLSX.utils.table_to_book(table, { sheet: 'Historique' });
 
         XLSX.writeFile(wb, 'historique_commandes.xlsx');
-    });
+    }
+
+    function showLoading(commandLabel) {
+        document.getElementById('loadingOverlay').style.display = 'flex';
+        let startTime = Date.now();
+        document.getElementById('loadingTime').textContent = "";
+        document.getElementById('loadingTextCommande').textContent = commandLabel;
+
+        loadingInterval = setInterval(() => {
+            let elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+            if (elapsedTime < 60) {
+                elapsedTime = elapsedTime + "s";
+            } else if (elapsedTime < 3600) {
+                elapsedTime = Math.floor(elapsedTime / 60) + "m " + (elapsedTime % 60) + "s";
+            } else {
+                elapsedTime = Math.floor(elapsedTime / 3600) + "h " + Math.floor((elapsedTime % 3600) / 60) + "m" + (elapsedTime % 60) + "s";
+            }
+            document.getElementById('loadingTime').textContent = elapsedTime;
+        }, 1000);
+    }
+
+    function hideLoading() {
+        clearInterval(loadingInterval);
+        document.getElementById('loadingOverlay').style.display = 'none';
+    }
+
+    document.getElementById('createUsersBtn').addEventListener('click', () => executeInsertOrSelect('create_users', 'Insert Utilisateurs', document.getElementById('nbEntitiesInsert').value));
+    document.getElementById('createProduitsBtn').addEventListener('click', () => executeInsertOrSelect('create_produits', 'Insert Produits', document.getElementById('nbEntitiesInsert').value));
+    document.getElementById('createAchatsBtn').addEventListener('click', () => executeInsertOrSelect('create_achats', 'Insert Achats', document.getElementById('nbEntitiesInsert').value));
+    document.getElementById('selectUsersBtn').addEventListener('click', () => executeInsertOrSelect('select_users', 'Select Utilisateurs', document.getElementById('nbEntitiesSelect').value));
+    document.getElementById('selectProduitsBtn').addEventListener('click', () => executeInsertOrSelect('select_produits', 'Select Produits', document.getElementById('nbEntitiesSelect').value));
+
+    document.getElementById('requestGlobalFollows').addEventListener('click', () => executeGlobalRequest('request/global/follows', document.getElementById('requestGlobalFollows').textContent));
+    document.getElementById('requestGlobalAchats').addEventListener('click', () => executeGlobalRequest('request/global/achats', document.getElementById('requestGlobalAchats').textContent));
+    document.getElementById('requestSpecific1').addEventListener('click', () => executeSpecific1());
+    document.getElementById('requestSpecific2').addEventListener('click', () => executeSpecific2());
+    document.getElementById('requestSpecific3').addEventListener('click', () => executeSpecific3());
+
+    document.getElementById('dbSizeBtn').addEventListener('click', () => getDBSize());
+    document.getElementById('dbClearBtn').addEventListener('click', () => clearDB());
+    document.getElementById('clearHistory').addEventListener('click', () => clearHistory());
+    document.getElementById('exportExcel').addEventListener('click', () => exportExcel());
 });
