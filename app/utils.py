@@ -27,17 +27,17 @@ def add_to_history(db_target, command, nb_entities, execution_time):
 
 
 def get_history():
-    if not os.path.exists("history.json"):
+    if not os.path.exists("/app/logs/history.json"):
         return []
 
     history = []
-    with open("history.json", "r") as f:
+    with open("/app/logs/history.json", "r") as f:
         for line in f:
             history.append(json.loads(line))
     return history
 
 
 def clear_history():
-    if os.path.exists("history.json"):
-        os.remove("history.json")
+    if os.path.exists("/app/logs/history.json"):
+        os.remove("/app/logs/history.json")
     return "Historique effacé"
