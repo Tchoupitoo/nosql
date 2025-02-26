@@ -1,8 +1,6 @@
 import psycopg2
 from db.base_db import *
-import uuid
-from utils import execute_with_timer
-import os
+
 
 class PostgresDB(base_db):
     def __init__(self):
