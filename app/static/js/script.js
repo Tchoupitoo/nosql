@@ -106,7 +106,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 <td>${data.execution_time}</td>
             `;
 
-        executionTable.scrollIntoView({ behavior: "smooth", block: "end" });
+        executionTable.scrollIntoView({behavior: "smooth", block: "end"});
 
 
         if (data.db_target === "postgres") {
@@ -135,8 +135,8 @@ document.addEventListener("DOMContentLoaded", function () {
         showLoading(commandName + " " + nbEntities + " (" + db + ")");
         const response = await fetch(`/${endpoint}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nb_entities: nbEntities, db_target: db })
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({nb_entities: nbEntities, db_target: db})
         });
         hideLoading();
 
@@ -151,8 +151,8 @@ document.addEventListener("DOMContentLoaded", function () {
         showLoading(commandName + " (" + db + ")");
         const response = await fetch(`/${endpoint}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ db_target: db })
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({db_target: db})
         });
         hideLoading();
 
@@ -167,11 +167,11 @@ document.addEventListener("DOMContentLoaded", function () {
         const userId = document.getElementById('userIdSpecific1').value;
         const deepLevel = document.getElementById('deepLevelSpecific1').value;
 
-        showLoading("Nb achats par produit depuis un user (profondeur : "+ deepLevel+") (" + db + ")");
+        showLoading("Nb achats par produit depuis un user (profondeur : " + deepLevel + ") (" + db + ")");
         const response = await fetch(`/request/specific/1`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ db_target: db, user_id: userId, deep_level: deepLevel })
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({db_target: db, user_id: userId, deep_level: deepLevel})
         });
         hideLoading();
 
@@ -187,11 +187,11 @@ document.addEventListener("DOMContentLoaded", function () {
         const productId = document.getElementById('productIdSpecific2').value;
         const deepLevel = document.getElementById('deepLevelSpecific2').value;
 
-        showLoading("Nb achats d'un produit depuis un user (profondeur : "+ deepLevel+") (" + db + ")");
+        showLoading("Nb achats d'un produit depuis un user (profondeur : " + deepLevel + ") (" + db + ")");
         const response = await fetch(`/request/specific/2`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ db_target: db, user_id: userId, product_id: productId, deep_level: deepLevel })
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({db_target: db, user_id: userId, product_id: productId, deep_level: deepLevel})
         });
         hideLoading();
 
@@ -199,18 +199,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
         showResponse(data);
         updateExecutionTable(data.command_history);
-    }    
+    }
 
     async function executeSpecific3() {
         const db = dbSelector.value;
         const productId = document.getElementById('productIdSpecific3').value;
         const deepLevel = document.getElementById('deepLevelSpecific3').value;
 
-        showLoading("Nb achats d'un produit depuis un user (profondeur : "+ deepLevel+") (" + db + ")");
+        showLoading("Nb achats d'un produit depuis un user (profondeur : " + deepLevel + ") (" + db + ")");
         const response = await fetch(`/request/specific/3`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ db_target: db, product_id: productId, deep_level: deepLevel })
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({db_target: db, product_id: productId, deep_level: deepLevel})
         });
         hideLoading();
 
@@ -218,7 +218,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         showResponse(data);
         updateExecutionTable(data.command_history);
-    }  
+    }
 
     async function clearDB() {
         if (!confirm("Êtes-vous sûr de vouloir supprimer ?")) {
@@ -227,8 +227,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const db = dbSelector.value;
         fetch(`/clear`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ db_target: db })
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({db_target: db})
         })
             .then(response => response.json())
             .then(data => {
@@ -243,7 +243,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         const response = await fetch(`/clear_history`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
+            headers: {'Content-Type': 'application/json'}
         });
 
         const data = await response.json();
@@ -255,8 +255,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const db = dbSelector.value;
         const response = await fetch(`/size`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ db_target: db })
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({db_target: db})
         });
 
         const data = await response.json();
@@ -271,7 +271,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function exportExcel() {
         let table = document.getElementById('executionTable');
-        let wb = XLSX.utils.table_to_book(table, { sheet: 'Historique' });
+        let wb = XLSX.utils.table_to_book(table, {sheet: 'Historique'});
 
         XLSX.writeFile(wb, 'historique_commandes.xlsx');
     }

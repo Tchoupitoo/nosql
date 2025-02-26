@@ -1,17 +1,119 @@
-{"date": "2025-02-11 16:01:57", "db_target": "postgres", "command": "insert_users", "nb_entities": 1000000, "execution_time": 3911154.056}
-{"date": "2025-02-11 16:19:15", "db_target": "postgres", "command": "insert_produits", "nb_entities": 10000, "execution_time": 3173.569}
-{"date": "2025-02-11 16:34:46", "db_target": "postgres", "command": "insert_achats", "nb_entities": 0, "execution_time": 909232.004}
-{"date": "2025-02-11 16:37:11", "db_target": "postgres", "command": "select_users", "nb_entities": 1, "execution_time": 117.401}
-{"date": "2025-02-11 16:39:37", "db_target": "postgres", "command": "nb_followers", "nb_entities": 0, "execution_time": 3674.004}
-{"date": "2025-02-11 16:39:57", "db_target": "postgres", "command": "nb_achats_produits_deep1", "nb_entities": 0, "execution_time": 485.229}
-{"date": "2025-02-11 16:40:00", "db_target": "postgres", "command": "nb_achats_produits_deep2", "nb_entities": 0, "execution_time": 500.822}
-{"date": "2025-02-11 16:40:06", "db_target": "postgres", "command": "nb_achats_produits_deep3", "nb_entities": 0, "execution_time": 541.799}
-{"date": "2025-02-11 16:40:12", "db_target": "postgres", "command": "nb_achats_produits_deep4", "nb_entities": 0, "execution_time": 779.51}
-{"date": "2025-02-11 16:40:24", "db_target": "postgres", "command": "nb_achats_produits_deep5", "nb_entities": 0, "execution_time": 2455.967}
-{"date": "2025-02-11 16:40:38", "db_target": "postgres", "command": "nb_achats_produits_deep6", "nb_entities": 0, "execution_time": 12098.646}
-{"date": "2025-02-11 16:41:15", "db_target": "postgres", "command": "nb_achats_produits_deep7", "nb_entities": 0, "execution_time": 28628.098}
-{"date": "2025-02-11 16:41:58", "db_target": "postgres", "command": "nb_achats_produit_unique_deep3", "nb_entities": 0, "execution_time": 63.416}
-{"date": "2025-02-11 16:42:03", "db_target": "postgres", "command": "nb_achats_produit_unique_deep4", "nb_entities": 0, "execution_time": 64.884}
-{"date": "2025-02-11 16:42:07", "db_target": "postgres", "command": "nb_achats_produit_unique_deep5", "nb_entities": 0, "execution_time": 210.629}
-{"date": "2025-02-11 16:42:26", "db_target": "postgres", "command": "nb_achats_produit_unique_deep7", "nb_entities": 0, "execution_time": 15079.315}
-{"date": "2025-02-11 16:42:43", "db_target": "postgres", "command": "db_size", "nb_entities": 0, "execution_time": 230.996}
+{
+  "date": "2025-02-11 16:01:57",
+  "db_target": "postgres",
+  "command": "insert_users",
+  "nb_entities": 1000000,
+  "execution_time": 3911154.056
+}
+{
+  "date": "2025-02-11 16:19:15",
+  "db_target": "postgres",
+  "command": "insert_produits",
+  "nb_entities": 10000,
+  "execution_time": 3173.569
+}
+{
+  "date": "2025-02-11 16:34:46",
+  "db_target": "postgres",
+  "command": "insert_achats",
+  "nb_entities": 0,
+  "execution_time": 909232.004
+}
+{
+  "date": "2025-02-11 16:37:11",
+  "db_target": "postgres",
+  "command": "select_users",
+  "nb_entities": 1,
+  "execution_time": 117.401
+}
+{
+  "date": "2025-02-11 16:39:37",
+  "db_target": "postgres",
+  "command": "nb_followers",
+  "nb_entities": 0,
+  "execution_time": 3674.004
+}
+{
+  "date": "2025-02-11 16:39:57",
+  "db_target": "postgres",
+  "command": "nb_achats_produits_deep1",
+  "nb_entities": 0,
+  "execution_time": 485.229
+}
+{
+  "date": "2025-02-11 16:40:00",
+  "db_target": "postgres",
+  "command": "nb_achats_produits_deep2",
+  "nb_entities": 0,
+  "execution_time": 500.822
+}
+{
+  "date": "2025-02-11 16:40:06",
+  "db_target": "postgres",
+  "command": "nb_achats_produits_deep3",
+  "nb_entities": 0,
+  "execution_time": 541.799
+}
+{
+  "date": "2025-02-11 16:40:12",
+  "db_target": "postgres",
+  "command": "nb_achats_produits_deep4",
+  "nb_entities": 0,
+  "execution_time": 779.51
+}
+{
+  "date": "2025-02-11 16:40:24",
+  "db_target": "postgres",
+  "command": "nb_achats_produits_deep5",
+  "nb_entities": 0,
+  "execution_time": 2455.967
+}
+{
+  "date": "2025-02-11 16:40:38",
+  "db_target": "postgres",
+  "command": "nb_achats_produits_deep6",
+  "nb_entities": 0,
+  "execution_time": 12098.646
+}
+{
+  "date": "2025-02-11 16:41:15",
+  "db_target": "postgres",
+  "command": "nb_achats_produits_deep7",
+  "nb_entities": 0,
+  "execution_time": 28628.098
+}
+{
+  "date": "2025-02-11 16:41:58",
+  "db_target": "postgres",
+  "command": "nb_achats_produit_unique_deep3",
+  "nb_entities": 0,
+  "execution_time": 63.416
+}
+{
+  "date": "2025-02-11 16:42:03",
+  "db_target": "postgres",
+  "command": "nb_achats_produit_unique_deep4",
+  "nb_entities": 0,
+  "execution_time": 64.884
+}
+{
+  "date": "2025-02-11 16:42:07",
+  "db_target": "postgres",
+  "command": "nb_achats_produit_unique_deep5",
+  "nb_entities": 0,
+  "execution_time": 210.629
+}
+{
+  "date": "2025-02-11 16:42:26",
+  "db_target": "postgres",
+  "command": "nb_achats_produit_unique_deep7",
+  "nb_entities": 0,
+  "execution_time": 15079.315
+}
+{
+  "date": "2025-02-11 16:42:43",
+  "db_target": "postgres",
+  "command": "db_size",
+  "nb_entities": 0,
+  "execution_time": 230.996
+}

@@ -1,25 +1,30 @@
 from flask import Flask, request, jsonify, render_template, send_from_directory
-from db.postgres_db import PostgresDB
-from db.neo4j_db import Neo4jDB
-import os
-from dotenv import load_dotenv
-from utils import *
 
-load_dotenv()
+from app.db.neo4j_db import Neo4jDB
+from app.db.postgres_db import PostgresDB
+from app.utils import *
 
+postgres_db = PostgresDB()
+postgres_db.init_db()
+
+neo4j_db = Neo4jDB()
+neo4j_db.init_db()
 app = Flask(__name__)
-
 @app.route('/')
 def home():
     return render_template('index.html')
 
+
 @app.route('/favicon.ico')
 def favicon():
-    return send_from_directory(os.path.join(app.root_path, 'static/images'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+    return send_from_directory(os.path.join(app.root_path, 'static/images'), 'favicon.ico',
+                               mimetype='image/vnd.microsoft.icon')
+
 
 @app.route('/history', methods=["GET"])
 def history():
     return jsonify(get_history())
+
 
 def create_entities(entity_type):
     data = request.json
@@ -42,8 +47,10 @@ def create_entities(entity_type):
 
     return jsonify({
         "results": results,
-        "command_history": add_to_history(db_target, f"insert_{entity_type}", nb_entities if entity_type != "achats" else 0, round(execution_time, 3))
+        "command_history": add_to_history(db_target, f"insert_{entity_type}",
+                                          nb_entities if entity_type != "achats" else 0, round(execution_time, 3))
     })
+
 
 def select_entities(entity_type):
     data = request.json
@@ -69,25 +76,31 @@ def select_entities(entity_type):
         "command_history": add_to_history(db_target, f"select_{entity_type}", nb_entities, round(execution_time, 3))
     })
 
+
 @app.route('/create_users', methods=["POST"])
 def create_users():
     return create_entities("users")
+
 
 @app.route('/create_produits', methods=["POST"])
 def create_produits():
     return create_entities("produits")
 
+
 @app.route('/create_achats', methods=["POST"])
 def create_achats():
     return create_entities("achats")
+
 
 @app.route('/select_users', methods=["POST"])
 def select_users():
     return select_entities("users")
 
+
 @app.route('/select_produits', methods=["POST"])
 def select_produits():
     return select_entities("produits")
+
 
 @app.route('/size', methods=["POST"])
 def db_size():
@@ -108,6 +121,7 @@ def db_size():
         "size": size
     })
 
+
 @app.route('/clear', methods=["POST"])
 def clear_db():
     data = request.json
@@ -127,10 +141,12 @@ def clear_db():
         "command_history": add_to_history(db_target, "clear_db", 0, round(execution_time, 3))
     })
 
+
 @app.route('/clear_history', methods=["POST"])
 def clearHistory():
     clear_history()
     return jsonify({"result": "Historique effacé"})
+
 
 @app.route('/request/global/follows', methods=["POST"])
 def requestGlobalFollows():
@@ -151,6 +167,7 @@ def requestGlobalFollows():
         "command_history": add_to_history(db_target, "nb_followers", 0, round(execution_time, 3))
     })
 
+
 @app.route('/request/global/achats', methods=["POST"])
 def requestGlobalAchatsByProduit():
     data = request.json
@@ -170,6 +187,7 @@ def requestGlobalAchatsByProduit():
         "command_history": add_to_history(db_target, "nb_achats", 0, round(execution_time, 3))
     })
 
+
 @app.route('/request/specific/1', methods=["POST"])
 def requestSpecific1():
     data = request.json
@@ -188,8 +206,10 @@ def requestSpecific1():
 
     return jsonify({
         "results": results,
-        "command_history": add_to_history(db_target, "nb_achats_produits_deep"+deep_level, 0, round(execution_time, 3))
+        "command_history": add_to_history(db_target, "nb_achats_produits_deep" + deep_level, 0,
+                                          round(execution_time, 3))
     })
+
 
 @app.route('/request/specific/2', methods=["POST"])
 def requestSpecific2():
@@ -210,8 +230,10 @@ def requestSpecific2():
 
     return jsonify({
         "results": results,
-        "command_history": add_to_history(db_target, "nb_achats_produit_unique_deep"+deep_level, 0, round(execution_time, 3))
+        "command_history": add_to_history(db_target, "nb_achats_produit_unique_deep" + deep_level, 0,
+                                          round(execution_time, 3))
     })
+
 
 @app.route('/request/specific/3', methods=["POST"])
 def requestSpecific3():
@@ -231,14 +253,5 @@ def requestSpecific3():
 
     return jsonify({
         "results": results,
-        "command_history": add_to_history(db_target, "viralité_produits_deep"+deep_level, 0, round(execution_time, 3))
-        })
-
-
-if __name__ == "__main__":
-    postgres_db = PostgresDB()
-    postgres_db.init_db()
-
-    neo4j_db = Neo4jDB()
-    neo4j_db.init_db()
-    app.run(host="0.0.0.0", port=5000, debug=True)
+        "command_history": add_to_history(db_target, "viralité_produits_deep" + deep_level, 0, round(execution_time, 3))
+    })

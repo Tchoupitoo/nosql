@@ -1,5 +1,13 @@
+import os
+import random
+import uuid
+from datetime import datetime
+
 from neo4j import GraphDatabase
-from db.base_db import *
+
+from app.db.base_db import *
+from app.utils import execute_with_timer
+
 
 class Neo4jDB(base_db):
     def __init__(self):
@@ -31,9 +39,9 @@ class Neo4jDB(base_db):
                 nom = fake.name()
                 user_id = str(uuid.uuid4())
                 execution_time += execute_with_timer(session.run,
-                    "CREATE (u:Utilisateur {id: $id, nom: $nom})",
-                    id=user_id,
-                    nom=nom)
+                                                     "CREATE (u:Utilisateur {id: $id, nom: $nom})",
+                                                     id=user_id,
+                                                     nom=nom)
                 users.append({"id": user_id, "nom": nom})
 
             users_list = session.run("MATCH (u:Utilisateur) RETURN u.id AS id")
@@ -46,12 +54,12 @@ class Neo4jDB(base_db):
                 for follower_id in followers:
                     if follower_id != user["id"]:
                         execution_time += execute_with_timer(session.run,
-                            """
-                                MATCH (a:Utilisateur {id: $user_id}), (b:Utilisateur {id: $follower_id})
-                                CREATE (a)-[:FOLLOWS]->(b)
-                            """,
-                            follower_id=follower_id,
-                            user_id=user["id"])
+                                                             """
+                                                                 MATCH (a:Utilisateur {id: $user_id}), (b:Utilisateur {id: $follower_id})
+                                                                 CREATE (a)-[:FOLLOWS]->(b)
+                                                             """,
+                                                             follower_id=follower_id,
+                                                             user_id=user["id"])
 
         return users, execution_time
 
@@ -63,11 +71,11 @@ class Neo4jDB(base_db):
                 nom = fake.word()
                 prix = round(random.uniform(5, 500), 2)
                 produit_id = str(uuid.uuid4())
-                execution_time += execute_with_timer(session.run, 
-                    "CREATE (p:Produit {id: $id, nom: $nom, prix: $prix})",
-                    id=produit_id,
-                    nom=nom,
-                    prix=prix)
+                execution_time += execute_with_timer(session.run,
+                                                     "CREATE (p:Produit {id: $id, nom: $nom, prix: $prix})",
+                                                     id=produit_id,
+                                                     nom=nom,
+                                                     prix=prix)
                 produits.append({"id": produit_id, "nom": nom, "prix": prix})
 
         return produits, execution_time
@@ -92,15 +100,16 @@ class Neo4jDB(base_db):
                 for produit_id in produits_achetes:
                     date_achat = datetime.now().isoformat()
                     execution_time += execute_with_timer(session.run,
-                        """
-                            MATCH (u:Utilisateur {id: $utilisateur_id}), (p:Produit {id: $produit_id})
-                            CREATE (u)-[:ACHAT {date: $date}]->(p)
-                        """,
-                        utilisateur_id=utilisateur_id,
-                        produit_id=produit_id,
-                        date=date_achat)
+                                                         """
+                                                             MATCH (u:Utilisateur {id: $utilisateur_id}), (p:Produit {id: $produit_id})
+                                                             CREATE (u)-[:ACHAT {date: $date}]->(p)
+                                                         """,
+                                                         utilisateur_id=utilisateur_id,
+                                                         produit_id=produit_id,
+                                                         date=date_achat)
 
-                    achats.append({"utilisateur_id": utilisateur_id, "produit_id": produit_id, "date_achat": date_achat})
+                    achats.append(
+                        {"utilisateur_id": utilisateur_id, "produit_id": produit_id, "date_achat": date_achat})
 
         return achats, execution_time
 
@@ -113,7 +122,7 @@ class Neo4jDB(base_db):
                 RETURN u.id AS id, u.nom AS nom
                 ORDER BY rand()
                 LIMIT $num
-                """, 
+                """,
                 {"num": num_users}
             )
             end_time = datetime.now()
@@ -131,7 +140,7 @@ class Neo4jDB(base_db):
                 RETURN p.id AS id, p.nom AS nom, p.prix AS prix
                 ORDER BY rand()
                 LIMIT $num
-                """, 
+                """,
                 {"num": num_produits}
             )
             end_time = datetime.now()
@@ -195,7 +204,7 @@ class Neo4jDB(base_db):
             results = [record.data() for record in result]
 
             return {"results": results}, (end_time - start_time).total_seconds() * 1000
-        
+
     def requestSpecific1(self, user_id, max_level=3):
         query = f"""
         MATCH (follower)-[:FOLLOWS*1..{max_level}]->(u:Utilisateur {{id: "{user_id}"}})
@@ -205,7 +214,7 @@ class Neo4jDB(base_db):
             p.nom AS product_name, 
             COUNT(*) AS nb_achats
         ORDER BY nb_achats DESC
-        """  
+        """
 
         start_time = datetime.now()
         with self.neo4j_driver.session() as session:
@@ -220,7 +229,7 @@ class Neo4jDB(base_db):
         ]
 
         return results, (end_time - start_time).total_seconds() * 1000
-    
+
     def requestSpecific2(self, user_id, product_id, max_level=3):
         query = f"""
         MATCH (follower)-[:FOLLOWS*1..{max_level}]->(u:Utilisateur {{id: "{user_id}"}})
@@ -228,24 +237,24 @@ class Neo4jDB(base_db):
         RETURN
             COUNT(*) AS nb_achats
         ORDER BY nb_achats DESC
-        """  
+        """
 
         start_time = datetime.now()
         with self.neo4j_driver.session() as session:
-            result = session.run(query)  
-            records = [record.data() for record in result] 
-            
+            result = session.run(query)
+            records = [record.data() for record in result]
+
         end_time = datetime.now()
 
         return records[0]["nb_achats"], (end_time - start_time).total_seconds() * 1000
-    
+
     def requestSpecific3(self, product_id, max_level=3):
         query = f"""
         MATCH (follower)-[:FOLLOWS*1..{max_level}]->(u:Utilisateur)
         MATCH (follower)-[:ACHAT]->(p:Produit {{id: "{product_id}"}})
         RETURN p.id AS product_id, p.nom AS product_name, COUNT(DISTINCT follower) AS num_buyers
         ORDER BY num_buyers DESC
-        """  
+        """
 
         start_time = datetime.now()
         with self.neo4j_driver.session() as session:

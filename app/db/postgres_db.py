@@ -1,5 +1,12 @@
+import os
+import random
+import uuid
+from datetime import datetime
+
 import psycopg2
-from db.base_db import *
+
+from app.db.base_db import *
+from app.utils import execute_with_timer
 
 
 class PostgresDB(base_db):
@@ -40,13 +47,13 @@ class PostgresDB(base_db):
             );
         """)
         self.pg_conn.commit()
-    
+
     def clear_db(self):
         try:
             self.pg_cursor.execute("TRUNCATE TABLE utilisateurs, followers, produits, achats RESTART IDENTITY CASCADE;")
             self.pg_conn.commit()
             print("Base de données PostgreSQL réinitialisée avec succès.")
-            
+
             self.init_db()
         except Exception as e:
             self.pg_conn.rollback()
@@ -60,9 +67,9 @@ class PostgresDB(base_db):
             nom = fake.name()
             user_id = str(uuid.uuid4())
             execution_time += execute_with_timer(self.pg_cursor.execute,
-                "INSERT INTO utilisateurs (id, nom) VALUES (%s, %s) RETURNING id;",
-                (user_id, nom,)
-            )
+                                                 "INSERT INTO utilisateurs (id, nom) VALUES (%s, %s) RETURNING id;",
+                                                 (user_id, nom,)
+                                                 )
             users.append({"id": user_id, "nom": nom})
 
         execution_time += self.commit()
@@ -77,9 +84,9 @@ class PostgresDB(base_db):
             for follower in followers:
                 if follower["id"] != user["id"]:
                     execution_time += execute_with_timer(self.pg_cursor.execute,
-                        "INSERT INTO followers (utilisateur_id, follower_id) VALUES (%s, %s) ON CONFLICT DO NOTHING;",
-                        (user["id"], follower["id"]) 
-                    )
+                                                         "INSERT INTO followers (utilisateur_id, follower_id) VALUES (%s, %s) ON CONFLICT DO NOTHING;",
+                                                         (user["id"], follower["id"])
+                                                         )
 
         execution_time += self.commit()
 
@@ -93,10 +100,10 @@ class PostgresDB(base_db):
             nom = fake.word()
             prix = round(random.uniform(5, 500), 2)
             produit_id = str(uuid.uuid4())
-            execution_time += execute_with_timer(self.pg_cursor.execute, 
-                "INSERT INTO produits (id, nom, prix) VALUES (%s, %s, %s) RETURNING id;",
-                (produit_id, nom, prix)
-            )
+            execution_time += execute_with_timer(self.pg_cursor.execute,
+                                                 "INSERT INTO produits (id, nom, prix) VALUES (%s, %s, %s) RETURNING id;",
+                                                 (produit_id, nom, prix)
+                                                 )
             produits.append({"id": produit_id, "nom": nom, "prix": prix})
 
         return produits, execution_time
@@ -120,9 +127,9 @@ class PostgresDB(base_db):
             for produit_id in produits_achetes:
                 date_achat = datetime.now()
                 execution_time += execute_with_timer(self.pg_cursor.execute,
-                    "INSERT INTO achats (utilisateur_id, produit_id, date_achat) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING;",
-                    (utilisateur_id, produit_id, date_achat)
-                )
+                                                     "INSERT INTO achats (utilisateur_id, produit_id, date_achat) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING;",
+                                                     (utilisateur_id, produit_id, date_achat)
+                                                     )
                 achats.append({"utilisateur_id": utilisateur_id, "produit_id": produit_id, "date_achat": date_achat})
 
         execution_time += self.commit()
@@ -185,10 +192,10 @@ class PostgresDB(base_db):
         end_time = datetime.now()
 
         results = [
-            {"id": row[0], "nom": row[1], "nb_followers": row[2]} 
+            {"id": row[0], "nom": row[1], "nb_followers": row[2]}
             for row in results
         ]
-        
+
         return results, (end_time - start_time).total_seconds() * 1000
 
     def requestGlobalAchatsByProduit(self):
@@ -205,13 +212,13 @@ class PostgresDB(base_db):
         end_time = datetime.now()
 
         results = [
-            {"product_id": row[0], "product_name": row[1], "num_buyers": row[2]} 
+            {"product_id": row[0], "product_name": row[1], "num_buyers": row[2]}
             for row in results
         ]
-        
+
         return results, (end_time - start_time).total_seconds() * 1000
-    
-    def requestSpecific1(self, user_id, max_level=3): 
+
+    def requestSpecific1(self, user_id, max_level=3):
         query = """
         WITH RECURSIVE follower_hierarchy AS (
             SELECT follower_id, utilisateur_id, 1 AS level
@@ -230,14 +237,14 @@ class PostgresDB(base_db):
         GROUP BY p.id, p.nom
         ORDER BY nb_achats DESC;
         """
-    
+
         start_time = datetime.now()
         self.pg_cursor.execute(query, (user_id, max_level))
         rows = self.pg_cursor.fetchall()
         end_time = datetime.now()
-    
-        results = [ {"product_id": row[0], "product_name": row[1], "nb_achats": row[2]} for row in rows ]
-    
+
+        results = [{"product_id": row[0], "product_name": row[1], "nb_achats": row[2]} for row in rows]
+
         return results, (end_time - start_time).total_seconds() * 1000
 
     def requestSpecific2(self, user_id, product_id, max_level=3):
@@ -260,13 +267,12 @@ class PostgresDB(base_db):
         GROUP BY p.id, p.nom
         ORDER BY nb_achats DESC;
         """
-    
+
         start_time = datetime.now()
         self.pg_cursor.execute(query, (user_id, max_level, product_id))
         rows = self.pg_cursor.fetchall()
         end_time = datetime.now()
-    
-    
+
         return rows[0], (end_time - start_time).total_seconds() * 1000
 
     def requestSpecific3(self, product_id, max_level=3):
@@ -293,17 +299,16 @@ class PostgresDB(base_db):
         start_time = datetime.now()
 
         self.pg_cursor.execute(query, (product_id, max_level, product_id))
-        
+
         products = self.pg_cursor.fetchall()
         end_time = datetime.now()
 
         products = [
-            {"product_id": row[0], "product_name": row[1], "num_buyers": row[2]} 
+            {"product_id": row[0], "product_name": row[1], "num_buyers": row[2]}
             for row in products
         ]
 
         return products, (end_time - start_time).total_seconds() * 1000
-
 
     def commit(self):
         return execute_with_timer(self.pg_conn.commit)

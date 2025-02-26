@@ -170,8 +170,12 @@ thead th {
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 .db-size-container {
@@ -195,7 +199,7 @@ thead th {
     font-size: 12px;
 }
 
-.table-header{
+.table-header {
     display: flex;
     align-items: center;
     justify-content: space-between;

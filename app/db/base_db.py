@@ -1,19 +1,16 @@
 from abc import ABC, abstractmethod
-from datetime import datetime
+
 from faker import Faker
-import random
-import uuid
-from utils import execute_with_timer
-import os
 
 fake = Faker()
 
+
 class base_db(ABC):
-    
+
     @abstractmethod
     def init_db(self):
         pass
-    
+
     @abstractmethod
     def clear_db(self):
         pass
@@ -33,7 +30,7 @@ class base_db(ABC):
     @abstractmethod
     def select_users(self, num_users):
         pass
-    
+
     @abstractmethod
     def select_produits(self, num_produits):
         pass
@@ -61,4 +58,3 @@ class base_db(ABC):
     @abstractmethod
     def requestSpecific3(self, product_id, max_level=3):
         pass
-  

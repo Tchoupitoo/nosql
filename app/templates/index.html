@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpeedTest SQL/NoSQL</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+<div class="container-fluid">
+    <div class="controls">
+        <div class="control-group">
+            <label for="dbSelector" class="form-label">Base de données :</label>
+            <select id="dbSelector" class="form-select">
+                <option value="postgres">PostgreSQL</option>
+                <option value="neo4j">Neo4j</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label class="form-label">Insert :</label>
+            <input type="number" id="nbEntitiesInsert" value="100" min="1" max="1000000" class="form-control"
+                   placeholder="Nombre d'entités"/>
+            <button id="createUsersBtn" class="btn btn-primary">Utilisateurs + Follows</button>
+            <button id="createProduitsBtn" class="btn btn-primary">Produits</button>
+            <button id="createAchatsBtn" class="btn btn-primary">Achats</button>
+        </div>
+
+        <div class="control-group">
+            <button id="dbSizeBtn" class="btn btn-success">MaJ</button>
+            <div id="dbSizeInfo" class="db-size-container">
+                <div>
+                    <label>Utilisateurs</label>
+                    <span id="nbUtilisateurs">-</span>
+                </div>
+                <div>
+                    <label>Follows</label>
+                    <span id="nbFollows">-</span>
+                </div>
+                <div>
+                    <label>Produits</label>
+                    <span id="nbProduits">-</span>
+                </div>
+                <div>
+                    <label>Achats</label>
+                    <span id="nbAchats">-</span>
+                </div>
+            </div>
+            <button id="dbClearBtn" class="btn btn-danger">Drop</button>
+        </div>
+        <div class="control-group">
+            <label class="form-label">Select : </label>
+            <input type="number" id="nbEntitiesSelect" value="1" min="1" max="100000" class="form-control"
+                   placeholder="Nombre d'entités"/>
+            <button id="selectUsersBtn" class="btn btn-primary">Utilisateurs</button>
+            <button id="selectProduitsBtn" class="btn btn-primary">Produits</button>
+        </div>
+
+        <div class="control-group">
+            <label class="form-label">Requètes globale :</label>
+            <button id="requestGlobalFollows" class="btn btn-primary">Nombre de followers par personne</button>
+            <button id="requestGlobalAchats" class="btn btn-primary">Nombre d'achats par produit</button>
+        </div>
+        <div class="control-group">
+            <label class="form-label">User :</label>
+            <input type="text" id="userIdSpecific1" placeholder="User id" class="form-control"/>
+            <label class="form-label">Profondeur :</label>
+            <input type="number" id="deepLevelSpecific1" value="3" min="1" max="10" class="form-control"
+                   placeholder="Nombre d'entités"/>
+            <button id="requestSpecific1" class="btn btn-primary">Nb achats par produit depuis un user</button>
+        </div>
+
+        <div class="control-group">
+            <label class="form-label">User :</label>
+            <input type="text" id="userIdSpecific2" placeholder="User id" class="form-control"/>
+            <label class="form-label">Produit :</label>
+            <input type="text" id="productIdSpecific2" placeholder="Product id" class="form-control"/>
+            <label class="form-label">Profondeur :</label>
+            <input type="number" id="deepLevelSpecific2" value="3" min="1" max="10" class="form-control"
+                   placeholder="Nombre d'entités"/>
+            <button id="requestSpecific2" class="btn btn-primary">Nb achats d'un produit depuis un user</button>
+        </div>
+
+        <div class="control-group">
+            <label class="form-label">User :</label>
+            <input type="text" id="productIdSpecific3" placeholder="Produit id" class="form-control"/>
+            <label class="form-label">Profondeur :</label>
+            <input type="number" id="deepLevelSpecific3" value="3" min="1" max="10" class="form-control"
+                   placeholder="Nombre d'entités"/>
+            <button id="requestSpecific3" class="btn btn-primary">Viralité d'un produit</button>
+        </div>
+
+    </div>
+
+    <div class="dashboard">
+        <div class="graph-container">
+            <h3>Performances</h3>
+            <canvas id="performanceGraph" width="400" height="200"></canvas>
+        </div>
+
+        <div class="table-container">
+            <div class="table-header">
+                <h3>Historique des commandes</h3>
+                <div>
+                    <button id="exportExcel" class="btn btn-success">Exporter</button>
+                    <button id="clearHistory" class="btn btn-danger">Effacer</button>
+                </div>
+            </div>
+            <div class="table-scroll">
+                <table id="executionTable">
+                    <thead>
+                    <tr>
+                        <th onclick="sortTable(0)">Date</th>
+                        <th onclick="sortTable(1)">DB</th>
+                        <th onclick="sortTable(2)">Commande</th>
+                        <th onclick="sortTable(3)">Nb Entities</th>
+                        <th onclick="sortTable(4)">Temps (ms)</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="response-container">
+        <h3>Réponse :</h3>
+        <pre id="response"></pre>
+    </div>
+</div>
+<div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p id="loadingTextCommande">"Commande"</p>
+    <p id="loadingText">En cours d'execution ...</p>
+    <span id="loadingTime">0</span>
+</div>
+<script>
+    function sortTable(n) {
+        const table = document.getElementById("executionTable");
+        let rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+        switching = true;
+        dir = "asc";
+
+        while (switching) {
+            switching = false;
+            rows = table.rows;
+
+            for (i = 1; i < (rows.length - 1); i++) {
+                shouldSwitch = false;
+                x = rows[i].getElementsByTagName("TD")[n];
+                y = rows[i + 1].getElementsByTagName("TD")[n];
+
+                if (n === 4) {
+                    x = parseFloat(x.innerHTML) || 0;
+                    y = parseFloat(y.innerHTML) || 0;
+                } else {
+                    x = x.innerHTML.toLowerCase();
+                    y = y.innerHTML.toLowerCase();
+                }
+
+                if (dir === "asc") {
+                    if (x > y) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                } else if (dir === "desc") {
+                    if (x < y) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+            }
+
+            if (shouldSwitch) {
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+                switchcount++;
+            } else {
+                if (switchcount === 0 && dir === "asc") {
+                    dir = "desc";
+                    switching = true;
+                }
+            }
+        }
+    }
+</script>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+
+</html>

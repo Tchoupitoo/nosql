@@ -1,35 +1,62 @@
 services:
+  app:
+    build: .
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      ENV_NEO4J_HOST: neo4j
+      ENV_NEO4J_BOLT_PORT: 7687
+      ENV_NEO4J_USER: neo4j
+      ENV_NEO4J_PASSWORD: password
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: database
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_PORT: 5432
+    volumes:
+      - app_logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+
   postgres:
     image: postgres:16
     container_name: nosql-postgres
     restart: always
-    env_file:
-      - .env
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: database
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "${POSTGRES_PORT}:5432"
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "postgres" ]
+      interval: 5s
+      retries: 5
+      timeout: 3s
 
   neo4j:
     image: neo4j:community
     container_name: nosql-neo4j
     restart: always
-    env_file:
-      - .env
     environment:
-      NEO4J_AUTH: ${ENV_NEO4J_USER}/${ENV_NEO4J_PASSWORD}
+      NEO4J_AUTH: neo4j/password
     volumes:
       - neo4j_data:/data
       - neo4j_logs:/logs
     ports:
       - "7474:7474"
-      - "${ENV_NEO4J_BOLT_PORT}:7687"
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "password", "RETURN 1"]
+      interval: 5s
+      retries: 5
+      timeout: 3s
 
 volumes:
   postgres_data:
   neo4j_data:
   neo4j_logs:
+  app_logs:
